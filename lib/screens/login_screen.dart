@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:homeward_blog/routes/route_names.dart';
 import 'package:homeward_blog/shared_style/animated_progress_indicator.dart';
 import 'package:homeward_blog/shared_style/app_colors.dart';
 import 'package:homeward_blog/shared_style/text_style.dart';
@@ -282,7 +283,11 @@ class _LoginItemsState extends State<LoginItems> {
                     padding: EdgeInsets.all(2),
                   ),
                   onPressed: () {
-                    Utils.showSnackbar(context, message: 'Coming Soon');
+                    if (_formKey.currentState!.validate()) {
+                      Navigator.pushNamed(context, BlogListRoute);
+                      _emailTextController.clear();
+                      _passwordTextController.clear();
+                    }
                   },
                   icon: Icon(
                     Icons.login,
@@ -363,7 +368,9 @@ class _LoginItemsState extends State<LoginItems> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     TextButton(
-                      onPressed: () async {},
+                      onPressed: () async {
+                        Utils.showSnackbar(context, message: 'Coming Soon');
+                      },
                       child: Text(
                         "Create An Account",
                         style: TextStyle(
