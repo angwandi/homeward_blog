@@ -31,8 +31,8 @@ class LoginResponseModel {
 
 //Login request model class
 class LoginRequestModel {
-  final String? email;
-  final String? password;
+  String? email;
+  String? password;
 
 //model constructor
   LoginRequestModel({

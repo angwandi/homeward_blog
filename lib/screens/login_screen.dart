@@ -4,12 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:homeward_blog/api/api_service.dart';
+import 'package:homeward_blog/model/login_model.dart';
 import 'package:homeward_blog/routes/route_names.dart';
 import 'package:homeward_blog/shared_style/animated_progress_indicator.dart';
 import 'package:homeward_blog/shared_style/app_colors.dart';
 import 'package:homeward_blog/shared_style/text_style.dart';
 import 'package:homeward_blog/shared_style/ui_helpers.dart';
 import 'package:homeward_blog/shared_style/utils.dart';
+import 'package:homeward_blog/shared_style/widgets/loading_screen.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -154,6 +157,8 @@ class _LoginItemsState extends State<LoginItems> {
   final _passwordTextController = TextEditingController();
   double _formProgress = 0;
   bool _obscureText = true;
+  LoginRequestModel? requestModel;
+  bool isProcessingAPICall = false;
 
   void _updateFormProgress() {
     var progress = 0.0;
@@ -180,6 +185,22 @@ class _LoginItemsState extends State<LoginItems> {
     });
   }
 
+  //validate before login
+  bool validateAndSave() {
+    final form = _formKey.currentState;
+    if (form!.validate()) {
+      form.save();
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    requestModel = LoginRequestModel();
+  }
+
   @override
   void dispose() {
     _emailTextController.dispose();
@@ -190,205 +211,236 @@ class _LoginItemsState extends State<LoginItems> {
   @override
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
-      builder: (context, sizeInfo) => SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          onChanged: () => _updateFormProgress(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              AnimatedProgressIndicator(value: _formProgress),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Text(
-                  'Login',
-                  style: TextStyle(
-                      fontSize: kIsWeb && sizeInfo.screenSize.width > 800
-                          ? 60.0
-                          : 50.0,
-                      fontWeight: FontWeight.bold,
-                      color: homeward_primary),
+      builder: (context, sizeInfo) => ProgressScreen(
+        inAsyncCall: isProcessingAPICall,
+        opacity: 0.3,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            onChanged: () => _updateFormProgress(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                AnimatedProgressIndicator(value: _formProgress),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Text(
+                    'Login',
+                    style: TextStyle(
+                        fontSize: kIsWeb && sizeInfo.screenSize.width > 800
+                            ? 60.0
+                            : 50.0,
+                        fontWeight: FontWeight.bold,
+                        color: homeward_primary),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: 16.0,
-                  bottom: 4.0,
-                  right: 16.0,
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16.0,
+                    bottom: 4.0,
+                    right: 16.0,
+                  ),
+                  child: sizeInfo.screenSize.width > 800
+                      ? null
+                      : Text(
+                          'Hello, Welcome back to \nhomeward !',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20.0,
+                          ),
+                        ),
                 ),
-                child: sizeInfo.screenSize.width > 800
-                    ? null
-                    : Text(
-                        'Hello, Welcome back to \nhomeward !',
+                verticalSpaceSmall,
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                  child: TextFormField(
+                    controller: _emailTextController,
+                    maxLines: 1,
+                    keyboardType: TextInputType.emailAddress,
+                    onSaved: (email) => requestModel!.email = email,
+                    textInputAction: TextInputAction.next,
+                    decoration: kTextFieldDecorations.copyWith(
+                        labelText: 'Email', hintText: 'Enter your email'),
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Email required';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextFormField(
+                    controller: _passwordTextController,
+                    obscureText: _obscureText,
+                    onSaved: (password) => requestModel!.password = password,
+                    keyboardType: TextInputType.visiblePassword,
+                    decoration: kTextFieldDecorations.copyWith(
+                      labelText: 'Password',
+                      hintText: 'Enter your password',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureText
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off,
+                          color: homeward_primary,
+                        ),
+                        onPressed: _toggle,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return 'Password required';
+                      } else if (value.length < 6) {
+                        return 'Minimum 6 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      primary: homeward_primary,
+                      padding: EdgeInsets.all(2),
+                    ),
+                    /*onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        Navigator.pushNamed(context, BlogListRoute);
+                        _emailTextController.clear();
+                        _passwordTextController.clear();
+                      } else {
+                        return null;
+                      }
+                    },*/
+                    onPressed: () {
+                      if (validateAndSave()) {
+                        print(requestModel!.toJson());
+                        setState(() {
+                          isProcessingAPICall = true;
+                        });
+                        APIService apiService = APIService();
+                        apiService.login(requestModel!).then((value) {
+                          if (value != null) {
+                            setState(() {
+                              isProcessingAPICall = true;
+                            });
+                            if (value.token!.isNotEmpty) {
+                              Navigator.pushNamed(context, BlogListRoute);
+                              _emailTextController.clear();
+                              _passwordTextController.clear();
+                              print('${value.token}');
+                            } else {
+                              Utils.showSnackbar(context,
+                                  message: '${value.error}');
+                            }
+                          }
+                        });
+                      }
+                    },
+                    icon: Icon(
+                      Icons.login,
+                      color: Colors.white,
+                    ),
+                    label: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Text(
+                        'Login',
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20.0,
+                          color: Colors.white,
+                          fontSize: 24,
                         ),
                       ),
-              ),
-              verticalSpaceSmall,
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                child: TextFormField(
-                  controller: _emailTextController,
-                  maxLines: 1,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  decoration: kTextFieldDecorations.copyWith(
-                      labelText: 'Email', hintText: 'Enter your email'),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Email required';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextFormField(
-                  controller: _passwordTextController,
-                  obscureText: _obscureText,
-                  keyboardType: TextInputType.visiblePassword,
-                  decoration: kTextFieldDecorations.copyWith(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureText
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off,
-                        color: homeward_primary,
-                      ),
-                      onPressed: _toggle,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Password required';
-                    } else if (value.length < 6) {
-                      return 'Minimum 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    primary: homeward_primary,
-                    padding: EdgeInsets.all(2),
-                  ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      Navigator.pushNamed(context, BlogListRoute);
-                      _emailTextController.clear();
-                      _passwordTextController.clear();
-                    } else {
-                      return null;
-                    }
-                  },
-                  icon: Icon(
-                    Icons.login,
-                    color: Colors.white,
-                  ),
-                  label: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Text(
-                      'Login',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                      ),
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
-                child: InkWell(
-                  onTap: () async {
-                    Utils.showSnackbar(context, message: 'Coming Soon');
-                  },
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: Text(
-                      'Forgot Password?',
-                      style: TextStyle(
-                          color: homeward_primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    text: "By proceeding, you agree to our",
-                    style: Theme.of(context).textTheme.subtitle1,
-                    children: [
-                      TextSpan(
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Coming Soon'),
-                              ),
-                            );
-                          },
-                        text: " \nPrivacy Policy & Terms of Services",
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
+                  child: InkWell(
+                    onTap: () async {
+                      Utils.showSnackbar(context, message: 'Coming Soon');
+                    },
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: Text(
+                        'Forgot Password?',
                         style: TextStyle(
-                          color: homeward_secondary_dark,
-                          fontWeight: FontWeight.bold,
+                            color: homeward_primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16.0, right: 16.0, bottom: 8.0),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      text: "By proceeding, you agree to our",
+                      style: Theme.of(context).textTheme.subtitle1,
+                      children: [
+                        TextSpan(
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Coming Soon'),
+                                ),
+                              );
+                            },
+                          text: " \nPrivacy Policy & Terms of Services",
+                          style: TextStyle(
+                            color: homeward_secondary_dark,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(0.0),
+                  child: Center(
+                      child: Text(
+                    "Don't have an account yet?",
+                    style: Theme.of(context).textTheme.subtitle1,
+                  )),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 16.0, right: 16.0, bottom: 16.0, top: 4.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      TextButton(
+                        onPressed: () async {
+                          Utils.showSnackbar(context, message: 'Coming Soon');
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.all(3),
+                        ),
+                        child: Text(
+                          "Create An Account",
+                          style: TextStyle(
+                            color: homeward_primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(0.0),
-                child: Center(
-                    child: Text(
-                  "Don't have an account yet?",
-                  style: Theme.of(context).textTheme.subtitle1,
-                )),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 16.0, right: 16.0, bottom: 16.0, top: 4.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    TextButton(
-                      onPressed: () async {
-                        Utils.showSnackbar(context, message: 'Coming Soon');
-                      },
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.all(3),
-                      ),
-                      child: Text(
-                        "Create An Account",
-                        style: TextStyle(
-                          color: homeward_primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
