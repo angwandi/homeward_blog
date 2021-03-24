@@ -4,15 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:homeward_blog/api/api_service.dart';
-import 'package:homeward_blog/model/login_model.dart';
-import 'package:homeward_blog/routes/route_names.dart';
+import 'package:homeward_blog/screens/blog_list_screen.dart';
 import 'package:homeward_blog/shared_style/animated_progress_indicator.dart';
 import 'package:homeward_blog/shared_style/app_colors.dart';
 import 'package:homeward_blog/shared_style/text_style.dart';
 import 'package:homeward_blog/shared_style/ui_helpers.dart';
 import 'package:homeward_blog/shared_style/utils.dart';
-import 'package:homeward_blog/shared_style/widgets/loading_screen.dart';
+import 'package:homeward_blog/widgets/loading_screen.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -157,7 +155,6 @@ class _LoginItemsState extends State<LoginItems> {
   final _passwordTextController = TextEditingController();
   double _formProgress = 0;
   bool _obscureText = true;
-  LoginRequestModel? requestModel;
   bool isProcessingAPICall = false;
 
   void _updateFormProgress() {
@@ -178,7 +175,7 @@ class _LoginItemsState extends State<LoginItems> {
     });
   }
 
-// Toggles the password show status
+// Toggle the password show status
   void _toggle() {
     setState(() {
       _obscureText = !_obscureText;
@@ -198,7 +195,6 @@ class _LoginItemsState extends State<LoginItems> {
   @override
   void initState() {
     super.initState();
-    requestModel = LoginRequestModel();
   }
 
   @override
@@ -259,7 +255,6 @@ class _LoginItemsState extends State<LoginItems> {
                     controller: _emailTextController,
                     maxLines: 1,
                     keyboardType: TextInputType.emailAddress,
-                    onSaved: (email) => requestModel!.email = email,
                     textInputAction: TextInputAction.next,
                     decoration: kTextFieldDecorations.copyWith(
                         labelText: 'Email', hintText: 'Enter your email'),
@@ -276,7 +271,6 @@ class _LoginItemsState extends State<LoginItems> {
                   child: TextFormField(
                     controller: _passwordTextController,
                     obscureText: _obscureText,
-                    onSaved: (password) => requestModel!.password = password,
                     keyboardType: TextInputType.visiblePassword,
                     decoration: kTextFieldDecorations.copyWith(
                       labelText: 'Password',
@@ -308,40 +302,28 @@ class _LoginItemsState extends State<LoginItems> {
                       primary: homeward_primary,
                       padding: EdgeInsets.all(2),
                     ),
-                    /*onPressed: () {
+                    onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        Navigator.pushNamed(context, BlogListRoute);
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return BlogListScreen();
+                            },
+                          ),
+                        );
                         _emailTextController.clear();
                         _passwordTextController.clear();
                       } else {
                         return null;
                       }
-                    },*/
-                    onPressed: () {
+                    },
+                    /*  onPressed: () {
                       if (validateAndSave()) {
-                        print(requestModel!.toJson());
                         setState(() {
                           isProcessingAPICall = true;
                         });
-                        APIService apiService = APIService();
-                        apiService.login(requestModel!).then((value) {
-                          if (value != null) {
-                            setState(() {
-                              isProcessingAPICall = true;
-                            });
-                            if (value.token!.isNotEmpty) {
-                              Navigator.pushNamed(context, BlogListRoute);
-                              _emailTextController.clear();
-                              _passwordTextController.clear();
-                              print('${value.token}');
-                            } else {
-                              Utils.showSnackbar(context,
-                                  message: '${value.error}');
-                            }
-                          }
-                        });
                       }
-                    },
+                    },*/
                     icon: Icon(
                       Icons.login,
                       color: Colors.white,
