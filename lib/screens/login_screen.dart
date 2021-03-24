@@ -287,6 +287,8 @@ class _LoginItemsState extends State<LoginItems> {
                       Navigator.pushNamed(context, BlogListRoute);
                       _emailTextController.clear();
                       _passwordTextController.clear();
+                    } else {
+                      return null;
                     }
                   },
                   icon: Icon(
@@ -371,6 +373,9 @@ class _LoginItemsState extends State<LoginItems> {
                       onPressed: () async {
                         Utils.showSnackbar(context, message: 'Coming Soon');
                       },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.all(3),
+                      ),
                       child: Text(
                         "Create An Account",
                         style: TextStyle(
