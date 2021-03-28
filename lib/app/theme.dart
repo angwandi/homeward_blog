@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+///App theme for app specific theme customisation
 class AppTheme {
   static ThemeData light() {
     return ThemeData(

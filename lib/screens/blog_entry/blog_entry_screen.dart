@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:homeward_blog/model/blog_list.dart';
-import 'package:homeward_blog/shared_style/app_colors.dart';
+import 'package:homeward_blog/shared_res/app_colors.dart';
 
 class BlogEntryScreen extends StatelessWidget {
   const BlogEntryScreen({
@@ -12,6 +12,7 @@ class BlogEntryScreen extends StatelessWidget {
 
   final BlogListModel blog;
 
+//For basic date format (other packages to the rescue as the app get bigger)
   String get _createdAt {
     final date = blog.createdAt;
 

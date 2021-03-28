@@ -7,6 +7,7 @@ import 'package:homeward_blog/model/login_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+///Could have split in two but this single provider model works well for the purpose of this app
 class Backend extends ChangeNotifier {
   //Login and get the token generated from the API
   Future<LoginResponseModel> login(LoginRequestModel requestModel) async {

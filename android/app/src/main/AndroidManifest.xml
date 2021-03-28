@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="HomewardBlog"
+        android:label="Homeward"
         android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"

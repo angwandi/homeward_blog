@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:homeward_blog/backend/backend.dart';
-import 'package:homeward_blog/screens/blog_entry_screen.dart';
-import 'package:homeward_blog/widgets/blog_list_title.dart';
 import 'package:provider/provider.dart';
+
+import 'file:///D:/dems/Projects/interviews/homeward/homeward_blog/lib/screens/blog_entry/blog_entry_screen.dart';
+import 'file:///D:/dems/Projects/interviews/homeward/homeward_blog/lib/screens/blog_list/blog_list_title.dart';
 
 class BlogListScreen extends StatefulWidget {
   @override
