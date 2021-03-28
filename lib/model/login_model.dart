@@ -1,4 +1,5 @@
 // login classes fields
+
 class LoginModelFields {
   static const String token = 'token';
   static const String error = 'error';
@@ -42,8 +43,8 @@ class LoginRequestModel {
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> map = {
-      LoginModelFields.email: email!.trim(),
-      LoginModelFields.password: password!.trim(),
+      LoginModelFields.email: email?.trim(),
+      LoginModelFields.password: password?.trim(),
     };
     return map;
   }

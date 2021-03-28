@@ -34,7 +34,7 @@ class BlogListTile extends StatelessWidget {
                   fit: BoxFit.cover,
                   imageUrl: blog.imageUrl!,
                   placeholder: (context, url) => Container(
-                    color: Colors.grey,
+                    color: Colors.black12,
                   ),
                   errorWidget: (context, url, error) => Icon(
                     Icons.error,
@@ -42,7 +42,11 @@ class BlogListTile extends StatelessWidget {
                 ),
               ),
             ),
-      title: Text(blog.title!),
+      title: Text(
+        blog.title!,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       subtitle: Text(
         'Created at : $_createdAt',
         maxLines: 1,

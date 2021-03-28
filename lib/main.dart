@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:homeward_blog/app/app.dart';
 import 'package:homeward_blog/backend/backend.dart';
+import 'package:provider/provider.dart';
+
+/*void main() {
+  runApp(HomewardApp());
+}*/
 
 void main() {
-  final backend =
-      Backend("https://60585b2ec3f49200173adcec.mockapi.io/api/v1/");
-  runApp(HomewardApp(backend: backend));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => Backend(),
+      child: HomewardApp(),
+    ),
+  );
 }

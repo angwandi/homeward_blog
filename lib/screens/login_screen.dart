@@ -4,14 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:homeward_blog/screens/blog_list_screen.dart';
+import 'package:homeward_blog/backend/backend.dart';
+import 'package:homeward_blog/model/login_model.dart';
 import 'package:homeward_blog/shared_style/animated_progress_indicator.dart';
 import 'package:homeward_blog/shared_style/app_colors.dart';
 import 'package:homeward_blog/shared_style/text_style.dart';
 import 'package:homeward_blog/shared_style/ui_helpers.dart';
 import 'package:homeward_blog/shared_style/utils.dart';
 import 'package:homeward_blog/widgets/loading_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_builder/responsive_builder.dart';
+
+import 'blog_list_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -71,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                         verticalSpaceMedium,
                                         Text(
-                                          'Manage properties from anywhere All for free.\n',
+                                          'Manage properties from anywhere. All for free.\n',
                                           textAlign: TextAlign.start,
                                           style: Theme.of(context)
                                               .textTheme
@@ -156,6 +160,7 @@ class _LoginItemsState extends State<LoginItems> {
   double _formProgress = 0;
   bool _obscureText = true;
   bool isProcessingAPICall = false;
+  LoginRequestModel? loginRequestModel;
 
   void _updateFormProgress() {
     var progress = 0.0;
@@ -195,6 +200,7 @@ class _LoginItemsState extends State<LoginItems> {
   @override
   void initState() {
     super.initState();
+    loginRequestModel = LoginRequestModel();
   }
 
   @override
@@ -241,7 +247,7 @@ class _LoginItemsState extends State<LoginItems> {
                   child: sizeInfo.screenSize.width > 800
                       ? null
                       : Text(
-                          'Hello, Welcome back to \nhomeward !',
+                          'Hello, Welcome back to \nHomeward !',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20.0,
@@ -255,6 +261,7 @@ class _LoginItemsState extends State<LoginItems> {
                     controller: _emailTextController,
                     maxLines: 1,
                     keyboardType: TextInputType.emailAddress,
+                    onSaved: (email) => loginRequestModel!.email = email!,
                     textInputAction: TextInputAction.next,
                     decoration: kTextFieldDecorations.copyWith(
                         labelText: 'Email', hintText: 'Enter your email'),
@@ -271,6 +278,8 @@ class _LoginItemsState extends State<LoginItems> {
                   child: TextFormField(
                     controller: _passwordTextController,
                     obscureText: _obscureText,
+                    onSaved: (password) =>
+                        loginRequestModel!.password = password,
                     keyboardType: TextInputType.visiblePassword,
                     decoration: kTextFieldDecorations.copyWith(
                       labelText: 'Password',
@@ -302,8 +311,25 @@ class _LoginItemsState extends State<LoginItems> {
                       primary: homeward_primary,
                       padding: EdgeInsets.all(2),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
+                    /*onPressed: () {
+                      */ /*if (_formKey.currentState!.validate()) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return BlogListScreen();
+                            },
+                          ),
+                        );
+
+                      } else {
+                        return null;
+                      }*/ /*
+                    },*/
+                    onPressed: () async {
+                      if (validateAndSave()) {
+                        print(loginRequestModel!.toJson());
+                        Provider.of<Backend>(context, listen: false)
+                            .login(loginRequestModel!);
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) {
@@ -313,17 +339,8 @@ class _LoginItemsState extends State<LoginItems> {
                         );
                         _emailTextController.clear();
                         _passwordTextController.clear();
-                      } else {
-                        return null;
                       }
                     },
-                    /*  onPressed: () {
-                      if (validateAndSave()) {
-                        setState(() {
-                          isProcessingAPICall = true;
-                        });
-                      }
-                    },*/
                     icon: Icon(
                       Icons.login,
                       color: Colors.white,

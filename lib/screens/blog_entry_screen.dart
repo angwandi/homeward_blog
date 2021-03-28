@@ -64,6 +64,8 @@ class BlogEntryScreen extends StatelessWidget {
                         children: [
                           Text(
                             blog.title!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style:
                                 Theme.of(context).textTheme.headline6!.copyWith(
                                       color: Colors.white,

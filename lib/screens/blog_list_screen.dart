@@ -21,7 +21,11 @@ class _BlogListScreenState extends State<BlogListScreen> {
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return const Center(
-              child: Text('An error occurred.'),
+              child: Text(
+                'Something went wrong! \nFailed to load Blogs!',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             );
           } else if (!snapshot.hasData) {
             return Center(
